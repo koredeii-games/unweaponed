@@ -3,12 +3,16 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import 'hero_player.dart';
+import 'party_list_icon.dart';
+import 'party_member.dart';
 
 /// 支援職パーティーRPG「Unweaponed」のメインゲーム。
-/// MVPステップ1: 左スティックによる主人公の移動のみを扱う。
+/// MVPステップ1: 左スティックによる主人公の移動。
+/// MVPステップ2: 単体ヒール(対象指定→詠唱→発動)。
 class UnweaponedGame extends FlameGame {
   late final JoystickComponent joystick;
   late final HeroPlayer hero;
+  late final PartyMember ally;
 
   @override
   Color backgroundColor() => const Color(0xFF7CB342); // 草原ステージの仮背景
@@ -29,7 +33,23 @@ class UnweaponedGame extends FlameGame {
 
     hero = HeroPlayer(joystick: joystick, position: Vector2.zero());
 
-    world.add(hero);
+    // 前衛/後衛の区別や自動戦闘AIは「仲間配置」ステップで追加する仮の仲間。
+    // hpは敵スポーン(戦闘)実装前のため、ヒール効果を目視確認できるよう仮に減らしてある。
+    ally = PartyMember(
+      name: 'ally-1',
+      position: Vector2(100, 0),
+      hp: 60,
+      onTapped: (target) => hero.beginHealCast(target),
+    );
+
+    world.addAll([ally, hero]);
+    camera.viewport.add(
+      PartyListIcon(
+        member: ally,
+        position: Vector2(16, 16),
+        onSelect: (target) => hero.beginHealCast(target),
+      ),
+    );
     camera.viewport.add(joystick);
     camera.follow(hero);
   }
