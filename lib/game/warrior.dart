@@ -1,6 +1,6 @@
 import 'package:flame/components.dart';
 
-import 'enemy_dummy.dart';
+import 'enemy.dart';
 import 'hero_player.dart';
 import 'party_member.dart';
 import 'unweaponed_game.dart';
@@ -17,7 +17,7 @@ class Warrior extends PartyMember with HasGameReference<UnweaponedGame> {
   final HeroPlayer hero;
   final Vector2 formationOffset;
 
-  EnemyDummy? _combatTarget;
+  Enemy? _combatTarget;
   double _attackTimer = 0;
 
   Warrior({
@@ -59,7 +59,7 @@ class Warrior extends PartyMember with HasGameReference<UnweaponedGame> {
 
   /// 現在の対象が生存中かつ検知範囲内ならそれを継続し、
   /// そうでなければ検知範囲内の最も近い敵を探す。
-  EnemyDummy? _pickTarget() {
+  Enemy? _pickTarget() {
     final current = _combatTarget;
     if (current != null &&
         current.isAlive &&
@@ -67,7 +67,7 @@ class Warrior extends PartyMember with HasGameReference<UnweaponedGame> {
       return current;
     }
 
-    EnemyDummy? nearest;
+    Enemy? nearest;
     var nearestDistance = double.infinity;
     for (final enemy in game.enemies) {
       if (!enemy.isAlive) {
