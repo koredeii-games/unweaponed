@@ -2,6 +2,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import '../economy/hireable_class.dart';
+import '../economy/upkeep.dart';
 import '../game/unweaponed_game.dart';
 
 /// 酒場UI。仲間を雇用してからダンジョンへ向かう。
@@ -28,7 +29,38 @@ class _TavernScreenState extends State<TavernScreen> {
     });
   }
 
-  void _enterDungeon() {
+  Future<void> _enterDungeon() async {
+    // 維持費はステージ開始時に徴収し、不足しているメンバーは脱退する。
+    final result = collectUpkeep(gold: _gold, hiredParty: _hired);
+    setState(() {
+      _gold = result.remainingGold;
+      _hired
+        ..clear()
+        ..addAll(result.remainingParty);
+    });
+
+    if (result.departedParty.isNotEmpty) {
+      final departedNames = result.departedParty
+          .map((hireable) => hireable.displayName)
+          .join('、');
+      await showDialog<void>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('維持費不足'),
+          content: Text('維持費が払えず、以下のメンバーが脱退しました:\n$departedNames'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) {
+        return;
+      }
+    }
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => Scaffold(
