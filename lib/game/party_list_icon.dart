@@ -18,12 +18,7 @@ class PartyListIcon extends PositionComponent with TapCallbacks {
 
   @override
   Future<void> onLoad() async {
-    add(
-      CircleComponent(
-        radius: size.x / 2,
-        paint: Paint()..color = const Color(0xFFE57373),
-      ),
-    );
+    add(CircleComponent(radius: size.x / 2, paint: Paint()..color = member.color));
   }
 
   @override

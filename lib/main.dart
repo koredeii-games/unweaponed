@@ -1,7 +1,6 @@
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
-import 'game/unweaponed_game.dart';
+import 'screens/tavern_screen.dart';
 
 void main() {
   runApp(const UnweaponedApp());
@@ -12,11 +11,6 @@ class UnweaponedApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Unweaponed',
-      home: Scaffold(
-        body: GameWidget.controlled(gameFactory: UnweaponedGame.new),
-      ),
-    );
+    return const MaterialApp(title: 'Unweaponed', home: TavernScreen());
   }
 }

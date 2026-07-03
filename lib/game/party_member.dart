@@ -2,13 +2,13 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 
-/// パーティーメンバー(仲間)。
-/// MVPステップ2時点ではヒール対象になれることだけを担う仮実装で、
-/// 自動戦闘AIや前衛/後衛の区別は「仲間配置」ステップで追加する。
+/// パーティーメンバー(仲間)。ヒール対象になれることと見た目(HPバー含む)を
+/// 担う共通基底で、自動戦闘AIは[CombatPartyMember]が実装する。
 class PartyMember extends PositionComponent with TapCallbacks {
   static const double maxHp = 100;
 
   final String name;
+  final Color color;
   final void Function(PartyMember target)? onTapped;
 
   double hp;
@@ -18,18 +18,14 @@ class PartyMember extends PositionComponent with TapCallbacks {
   PartyMember({
     required this.name,
     required super.position,
+    this.color = const Color(0xFFE57373),
     this.hp = maxHp,
     this.onTapped,
   }) : super(size: Vector2.all(28), anchor: Anchor.center);
 
   @override
   Future<void> onLoad() async {
-    add(
-      CircleComponent(
-        radius: size.x / 2,
-        paint: Paint()..color = const Color(0xFFE57373),
-      ),
-    );
+    add(CircleComponent(radius: size.x / 2, paint: Paint()..color = color));
 
     add(
       RectangleComponent(

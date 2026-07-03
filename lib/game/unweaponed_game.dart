@@ -2,12 +2,15 @@ import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
+import '../economy/hireable_class.dart';
+import 'archer.dart';
 import 'dungeon/dungeon_generator.dart';
 import 'dungeon/dungeon_map.dart';
 import 'enemy.dart';
 import 'enemy_spawner.dart';
 import 'hero_player.dart';
 import 'party_list_icon.dart';
+import 'party_member.dart';
 import 'warrior.dart';
 
 /// 支援職パーティーRPG「Unweaponed」のメインゲーム。
@@ -16,12 +19,19 @@ import 'warrior.dart';
 /// MVPステップ3: 戦士配置(前衛の自動戦闘)。
 /// MVPステップ4: 敵スポーン(固定配置+ランダムポップ)。
 /// MVPステップ5: マップ生成(BSP)。
+/// MVPステップ6: 酒場UI(雇用)。雇用済みの職業を[hiredParty]で受け取る。
 class UnweaponedGame extends FlameGame {
+  UnweaponedGame({required this.hiredParty});
+
+  final Set<HireableClass> hiredParty;
+
   late final JoystickComponent joystick;
   late final HeroPlayer hero;
-  late final Warrior warrior;
 
-  /// 敵配置スポナーが生成した敵一覧。戦士の自動戦闘AIが検知対象として参照する。
+  /// 酒場で雇用したパーティーメンバー。
+  final List<PartyMember> partyMembers = [];
+
+  /// 敵配置スポナーが生成した敵一覧。戦士・弓使いの自動戦闘AIが検知対象として参照する。
   final List<Enemy> enemies = [];
 
   @override
@@ -43,19 +53,32 @@ class UnweaponedGame extends FlameGame {
       margin: const EdgeInsets.only(left: 32, bottom: 32),
     );
 
-    hero = HeroPlayer(
-      joystick: joystick,
-      position: dungeon.startRoom.center,
-    );
+    hero = HeroPlayer(joystick: joystick, position: dungeon.startRoom.center);
 
-    warrior = Warrior(
-      name: '戦士',
-      position: hero.position + Vector2(60, 0),
-      hero: hero,
-      formationOffset: Vector2(60, 0),
-      hp: 60, // ヒール効果を目視確認できるよう仮に減らしてある
-      onTapped: (target) => hero.beginHealCast(target),
-    );
+    if (hiredParty.contains(HireableClass.warrior)) {
+      final formationOffset = Vector2(60, 0);
+      partyMembers.add(
+        Warrior(
+          position: hero.position + formationOffset,
+          hero: hero,
+          formationOffset: formationOffset,
+          hp: 60, // ヒール効果を目視確認できるよう仮に減らしてある
+          onTapped: (target) => hero.beginHealCast(target),
+        ),
+      );
+    }
+    if (hiredParty.contains(HireableClass.archer)) {
+      final formationOffset = Vector2(-60, 40);
+      partyMembers.add(
+        Archer(
+          position: hero.position + formationOffset,
+          hero: hero,
+          formationOffset: formationOffset,
+          hp: 40, // ヒール効果を目視確認できるよう仮に減らしてある
+          onTapped: (target) => hero.beginHealCast(target),
+        ),
+      );
+    }
 
     final spawner = EnemySpawner(
       hero: hero,
@@ -72,14 +95,17 @@ class UnweaponedGame extends FlameGame {
           .toList(),
     );
 
-    world.addAll([DungeonMap(dungeon), warrior, hero, spawner]);
-    camera.viewport.add(
-      PartyListIcon(
-        member: warrior,
-        position: Vector2(16, 16),
-        onSelect: (target) => hero.beginHealCast(target),
-      ),
-    );
+    world.addAll([DungeonMap(dungeon), ...partyMembers, hero, spawner]);
+
+    for (var i = 0; i < partyMembers.length; i++) {
+      camera.viewport.add(
+        PartyListIcon(
+          member: partyMembers[i],
+          position: Vector2(16, 16 + i * 44),
+          onSelect: (target) => hero.beginHealCast(target),
+        ),
+      );
+    }
     camera.viewport.add(joystick);
     camera.follow(hero);
   }
